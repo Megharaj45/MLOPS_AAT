@@ -3,7 +3,3 @@ __pycache__/
 *.pyc
 *.pyo
 .DS_Store
-results/*.npy
-results/*.png
-policies/*.pkl
-experiments/*.csv

@@ -1,0 +1,2 @@
+run_id,config,episodes,avg_reward_last100,avg_carbon_last100,rl_test_reward,rl_test_carbon,random_test_reward,random_test_carbon,epsilon_final,learning_rate,gamma,epsilon_decay,training_time_s
+qlearning_v2,configs/qlearning_v2.yaml,1000,182.87,0.12,177,15,-21,15,0.0,0.2,0.99,0.99,1.5
