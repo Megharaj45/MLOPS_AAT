@@ -43,6 +43,23 @@
 ---
 
 ## System Design
+Pipeline Flow:
+
+Developer pushes code to GitHub
+GitHub Actions CI/CD triggers automatically
+train.py runs Q-Learning for 1000 episodes
+MLflow logs all parameters and metrics
+Best policy saved to policies/ folder
+Results and plots saved to results/ folder
+If performance drops, rollback.py restores best policy
+Components:
+
+sim/energy_grid_env.py → Custom Gymnasium environment
+sim/q_agent.py → Q-Learning agent with epsilon-greedy
+train.py → Training loop with MLflow integration
+rollback.py → Policy restoration mechanism
+.github/workflows/train.yml → CI/CD automation
+
 ---
 
 ## Tools Used
