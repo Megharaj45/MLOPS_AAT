@@ -12,8 +12,11 @@ import pickle
 import sys
 import time
 
+
 import numpy as np
 import yaml
+import mlflow
+mlflow.set_experiment("energy-grid-rl")
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from sim.energy_grid_env import EnergyGridEnv
@@ -166,6 +169,19 @@ with open(csv_path, "w", newline="") as f:
     })
 
 print(f"\nExperiment log saved → {csv_path}")
+
+with mlflow.start_run(run_name=RUN_ID):
+    mlflow.log_param("alpha", ALPHA)
+    mlflow.log_param("gamma", GAMMA)
+    mlflow.log_param("epsilon_decay", EPS_DECAY)
+    mlflow.log_param("n_episodes", N_EPISODES)
+    mlflow.log_metric("avg_reward_last100", round(float(np.mean(rewards_log[-100:])), 2))
+    mlflow.log_metric("avg_carbon_last100", round(float(np.mean(carbon_log[-100:])), 2))
+    mlflow.log_metric("rl_test_reward", rl_reward)
+    mlflow.log_metric("rl_test_carbon", env.total_carbon)
+    mlflow.log_metric("training_time_s", elapsed)
+    mlflow.log_artifact(csv_path)
+print("MLflow run logged successfully!") 
 
 # ── Comparison table ─────────────────────────────────────────────────
 print("\n" + "=" * 50)
