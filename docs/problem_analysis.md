@@ -1,101 +1,125 @@
-# Problem Analysis & Design Document
-## Energy Grid RL Scheduler
+# Problem Analysis — Energy Grid RL Scheduler
+
+## Abstract
+This project develops a Reinforcement Learning-based energy scheduling 
+agent using Q-Learning to optimise energy dispatch across renewable, 
+battery, and grid sources over a 24-hour period. The system integrates 
+MLOps practices including CI/CD, experiment tracking via MLflow, 
+versioned policies, and automated rollback.
 
 ---
 
-## 1. Stakeholders
+## Stakeholders
 | Stakeholder | Role | Interest |
-|---|---|---|
-| Energy Grid Operators | Primary User | Minimize carbon, maximize renewable usage |
-| Government/Policy Makers | Regulator | SDG compliance, carbon reduction targets |
-| End Consumers | Beneficiary | Reliable, affordable clean energy |
-| ML Engineers | Developer | Model performance, reproducibility |
-| Environmental Organizations | Monitor | Carbon emission reduction |
+|-------------|------|----------|
+| Grid Operators | Primary Users | Optimise dispatch, reduce cost |
+| Energy Consumers | End Users | Reliable, clean power supply |
+| Government/Regulators | Oversight | Meet SDG 7, 9, 13 targets |
+| ML Engineers | Developers | Reproducible, scalable pipeline |
+| Environmental Bodies | Monitors | Carbon emission reduction |
 
 ---
 
-## 2. Use Cases
-| Use Case | Description |
-|---|---|
-| UC1 | Schedule hourly energy source for 24-hour period |
-| UC2 | Monitor battery charge/discharge cycles |
-| UC3 | Track and minimize carbon emissions per episode |
-| UC4 | Compare RL policy vs random baseline |
-| UC5 | Reproduce experiments using config files |
+## Functional Requirements
+1. Agent schedules energy source for each of 24 hours
+2. Prioritise renewable energy when available
+3. Use battery storage as secondary source
+4. Fall back to grid only when necessary
+5. Log all training runs via MLflow
+6. Save best policy after training
+7. Support rollback to previous best policy
+8. CI/CD pipeline triggers on every push
 
 ---
 
-## 3. Functional Requirements
-| ID | Requirement |
-|---|---|
-| FR1 | System shall select energy source every hour |
-| FR2 | System shall track battery level (0-10 units) |
-| FR3 | System shall simulate solar/wind availability |
-| FR4 | System shall assign rewards: +10 renewable, +3 battery, -5 grid |
-| FR5 | System shall log carbon units per episode |
-| FR6 | System shall save policy snapshots at episode 500 and 1000 |
-| FR7 | System shall track experiments using MLflow |
-| FR8 | System shall generate performance visualizations |
+## Non-Functional Requirements
+1. Training completes within 1000 episodes
+2. Pipeline fully reproducible across machines
+3. Carbon reduction target minimum 90%
+4. Renewable usage target minimum 70%
+5. System scalable to multiple config files
+6. Rollback completes within seconds
 
 ---
 
-## 4. Non-Functional Requirements
-| ID | Requirement |
-|---|---|
-| NFR1 | Training must complete within 60 seconds for 1000 episodes |
-| NFR2 | System must be reproducible using YAML config files |
-| NFR3 | Code must be modular and well-documented |
-| NFR4 | MLflow must log all parameters and metrics |
-| NFR5 | System must work on Python 3.8+ |
-| NFR6 | Results must be version controlled using Git |
+## System Design
+
+**Pipeline Flow:**
+
+1. Developer pushes code to GitHub
+2. GitHub Actions CI/CD triggers automatically
+3. train.py runs Q-Learning for 1000 episodes
+4. MLflow logs all parameters and metrics
+5. Best policy saved to policies/ folder
+6. Results and plots saved to results/ folder
+7. If performance drops, rollback.py restores best policy
+
+**Components:**
+- sim/energy_grid_env.py → Custom Gymnasium environment
+- sim/q_agent.py → Q-Learning agent with epsilon-greedy
+- train.py → Training loop with MLflow integration
+- rollback.py → Policy restoration mechanism
+- .github/workflows/train.yml → CI/CD automation
 
 ---
 
-## 5. Feasibility & Constraints
-### Technical Feasibility
-- Q-Learning is proven for discrete state-action spaces
-- State space [11 x 24 x 3] is small enough for tabular Q-table
-- Python + Gymnasium + MLflow are industry-standard tools
-
-### Constraints
-- Battery limited to 0-10 units
-- Episode length fixed at 24 hours (one day)
-- Renewable availability depends on time of day (solar/wind simulation)
-- No real-time weather data integration in current version
+## Feasibility Analysis
+| Factor | Assessment |
+|--------|------------|
+| Technical | Q-Learning suitable for small discrete state space |
+| Computational | Runs on CPU, no GPU required |
+| Time | 1000 episodes complete in seconds |
+| Data | No external dataset needed, simulation-based |
+| Cost | Zero cost, open source tools only |
 
 ---
 
-## 6. Trade-offs & Risks
-| Trade-off | Decision | Reason |
-|---|---|---|
-| Tabular Q-Learning vs DQN | Q-Learning chosen | State space is small and discrete |
-| 1000 episodes vs more | 1000 chosen | Sufficient convergence, fast training |
-| CSV + MLflow vs only MLflow | Both used | CSV for backup, MLflow for visualization |
-
-| Risk | Mitigation |
-|---|---|
-| Overfitting to simulation | Randomized battery start (3-8 units) |
-| Slow convergence | epsilon_decay tuned to 0.995 |
-| Reproducibility failure | YAML configs + MLflow tracking |
+## Constraints
+- Battery level: 0 to 10 units only
+- Episode length: fixed 24 steps (hours)
+- State space: [11 x 24] = 264 states
+- Action space: 3 actions only
+- No real-time data feed (simulation only)
 
 ---
 
-## 7. System Design
-Input: hour_of_day, battery_level
-         ↓
-EnergyGridEnv (Gymnasium)
-         ↓
-QLearningAgent (epsilon-greedy)
-         ↓
-Q-table update (Bellman equation)
-         ↓
-Output: energy_source, reward, carbon_count
-         ↓
-MLflow tracking + CSV logging
+## Trade-offs
+| Decision | Chosen | Alternative | Reason |
+|----------|--------|-------------|--------|
+| Algorithm | Q-Learning | Deep RL (DQN) | State space too small for DNN |
+| Tracking | MLflow | Weights & Biases | Open source, self-hosted |
+| CI/CD | GitHub Actions | Jenkins | Native GitHub integration |
+| Environment | Gymnasium | Custom | Standard RL interface |
 
-## 8. SDG Traceability
-| SDG | Requirement | Implementation |
-|---|---|---|
-| SDG 7 | Clean energy usage | +10 reward for renewable, 75% usage achieved |
-| SDG 9 | Smart infrastructure | AI-driven grid scheduling with MLflow |
-| SDG 13 | Carbon reduction | Carbon reduced from 12 to ~0 by episode 800 |
+---
+
+## Risk Analysis
+| Risk | Probability | Impact | Mitigation |
+|------|-------------|--------|------------|
+| Policy divergence | Medium | High | Rollback to best policy |
+| Experiment data loss | Low | High | MLflow tracking |
+| Dependency conflict | Low | Medium | requirements.txt pinned |
+| Pipeline failure | Low | Medium | GitHub Actions alerts |
+| Overfitting to config | Medium | Medium | Multiple config files |
+
+---
+
+## Traceability Matrix
+| Requirement | Component | Test |
+|-------------|-----------|------|
+| Energy scheduling | sim/energy_grid_env.py | Episode reward |
+| Q-Learning agent | sim/q_agent.py | Convergence plot |
+| Experiment tracking | train.py + MLflow | mlflow.db logs |
+| CI/CD automation | .github/workflows | Actions green ✅ |
+| Rollback | rollback.py + policies/ | Policy loaded |
+| Visualisation | visualize.py | Plots in results/ |
+
+---
+
+## Conclusions
+- Q-Learning agent successfully learns optimal scheduling policy
+- Carbon emissions reduced by 92% over 1000 training episodes
+- Renewable energy usage consistently above 75%
+- MLOps pipeline ensures full reproducibility and traceability
+- Rollback mechanism provides production-grade reliability
+- CI/CD automates training and validation on every commit
