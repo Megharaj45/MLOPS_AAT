@@ -110,7 +110,7 @@ versioned policies, and automated rollback.
 | Energy scheduling | sim/energy_grid_env.py | Episode reward |
 | Q-Learning agent | sim/q_agent.py | Convergence plot |
 | Experiment tracking | train.py + MLflow | mlflow.db logs |
-| CI/CD automation | .github/workflows | Actions green ✅ |
+| CI/CD automation | .github/workflows | Actions green  |
 | Rollback | rollback.py + policies/ | Policy loaded |
 | Visualisation | visualize.py | Plots in results/ |
 
